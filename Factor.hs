@@ -8,6 +8,7 @@ import Test.QuickCheck
 import System
 import Debug.Trace
 
+{--------------- basic factorization code -------------------}
 factors :: Integer -> [Integer]
 factors x
   | x < 2      = [1]
@@ -20,12 +21,16 @@ factors' x y zs
   | x `mod` y == 0                          = factors' x (y+1) (y : zs)
   | otherwise                               = factors' x (y+1) zs
 
+
+{--------------- serially factor a list of numbers ----------------}
 getFactorString :: Integer -> String
 getFactorString x = concat $ intersperse "," $ map show $ factors x
 
 getFactorStringRange :: Integer -> Integer -> [String]
 getFactorStringRange x y = map getFactorString [x..y]
 
+
+{--------------- factor a list of numbers in parallel ----------------}
 getFactorString' :: Integer -> Par String
 getFactorString' x = do
     calc <- spawn $ return $ concat $ intersperse "," $ map show $ factors x
