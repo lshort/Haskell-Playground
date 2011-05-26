@@ -1,0 +1,5 @@
+127.0.0.1 - - [26/May/2011:13:21:31 -0700] "GET / HTTP/1.1" 200 - - "Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"
+127.0.0.1 - - [26/May/2011:13:21:33 -0700] "GET /cheese_template HTTP/1.1" 500 284 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"
+127.0.0.1 - - [26/May/2011:13:23:06 -0700] "GET /cheese_template HTTP/1.1" 500 256 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"
+127.0.0.1 - - [26/May/2011:13:24:52 -0700] "GET /cheese_template HTTP/1.1" 200 - "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"
+127.0.0.1 - - [26/May/2011:13:24:56 -0700] "GET / HTTP/1.1" 200 - "http://localhost:8000/cheese_template" "Mozilla/5.0 (X11; Linux x86_64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"
