@@ -5,19 +5,20 @@
 
 <body>
 <form method="get" name="nameform">
-<uri_text_input  name="name" value="data:name" label="Name"/>
+<uri_text_w_save  name="name" value="data:name" label="Name"/>
 </form>
 <br />
+<form method="post" name="dataform" action="cheese_template?_task=save">
+<sql_text_input table="cheese" key="name" value="data:name" column="name" label="Name"/>
+<sql_text_input table="cheese" key="name" value="data:name" column="country" label="Country"/>
 <sql_text_input table="cheese" key="name" value="data:name" column="price" label="Price"/>
+<sql_text_input table="cheese" key="name" value="data:name" column="stock" label="Stock"/>
+<input type="submit" value="Save">
+</form>
 <br />
 
 
 
-<get_sql_with_name>
-  <column>country</column>
-  <table>cheese</table>
-</get_sql_with_name>
-<br />
 
 
 <br />  <br />
