@@ -56,7 +56,6 @@ echo = do
     heistLocal (bindString "message" (T.decodeUtf8 message)) $ render "echo"
   where
     decodedParam p = fromMaybe "" <$> getParam p
-
 ------------------------------------------------------------------------------
 -- | Renders the cheese_template page.
 my_template ::  Application ()
@@ -64,12 +63,9 @@ my_template= heistLocal templateSt $ render "cheese_template"
   where
     templateSt ts = bindSplices sqlSplices ts
     sqlSplices =
-        [ ("get_sql_basic",   grabSQLbasic)
-        , ("get_sql_where_attr",   grabSQLwhereAttr)
-        , ("get_sql_where",   grabSQLwhere)
-        , ("get_sql_with_name",   grabSQLwithName)
-        , ("sql_text_input",   sqlTextInput)
+        [ ("sql_text_input",   sqlTextInput)
         , ("uri_text_input",   uriTextInput)
+        , ("uri_text_w_save",  uriTextWithSave)
         ]
 
 
@@ -85,18 +81,6 @@ site  = route [ ("/",  index)
 
 ----------------------------------------------------------------------
 -- | Uses tag attributes to run a query where key = value
-grabSQLwhereAttr :: Splice Application
-grabSQLwhereAttr = do
-    contents <- getParamNode
-    let column = getAttr contents "column"
-        key    = getAttr contents "key"
-        value  = getAttr contents "value"
-        table  = getAttr contents "table"
-    qval <- liftIO $ runQuery $ bldQueryWhereEq column table key $ addQuote value
-    return $ [X.TextNode $ DT.pack $ qval]
-
-----------------------------------------------------------------------
--- | Uses tag attributes to run a query where key = value
 uriTextInput :: Splice Application
 uriTextInput = do
     node <- getParamNode
@@ -109,6 +93,39 @@ uriTextInput = do
                               X.elementChildren = [] }
     return $ (X.TextNode $ DT.pack $ label ++ ": ") : [element]
 
+
+----------------------------------------------------------------------
+-- | Uses tag attributes to run a query where key = value
+uriTextWithSave :: Splice Application
+uriTextWithSave = do
+    node <- getParamNode
+    req <- lift getRequest
+    null <- liftIO $ maybeSaveCheese node req 
+    uriTextInput
+
+maybeSaveCheese :: X.Node -> Request -> IO ()
+maybeSaveCheese node req = do
+    let task = getReqParam req "_task"
+        name = getReqParam req "name"
+    if (not $ null name) && (task == "save")
+    then (saveCheese node req)
+    else return ()
+
+saveCheese :: X.Node -> Request -> IO ()
+saveCheese node req = do
+    conn <- connectPostgreSQL "dbname=test"
+    stmt <- prepare conn "INSERT INTO cheese VALUES (?, ?, ?, ?)"
+    let name    = getReqParam req "name"
+        price   = getReqParam req "price"
+        country = getReqParam req "country"
+        stock   = getReqParam req "stock"
+    execute stmt [toSql name, toSql country, toSql price, toSql stock]
+    commit conn
+    disconnect conn
+
+getReqParam :: Request -> ByteString -> String
+getReqParam req attr = 
+    byteStrToStr $ head $ fromMaybe [BS.empty] $ rqParam attr req
 
 ----------------------------------------------------------------------
 -- | Uses tag attributes to run a query where key = value
@@ -136,39 +153,6 @@ decode n r s =
       else y
 
 
-
-
------------------------------------------------------------------------
--- | Uses child element contents to run a query with a general where clause
-grabSQLwhere :: Splice Application
-grabSQLwhere = do
-    contents <- getParamNode
-    let column = getChildText contents "column"
-        clause = getChildText contents "where_clause"
-        table  = getChildText contents "table"
-    qval <- liftIO $ runQuery $ bldQueryWhere column table clause
-    return $ [X.TextNode $ DT.pack $ qval]
-
------------------------------------------------------------------------
--- | Uses child element contents to run a query with a general where clause
-grabSQLwithName :: Splice Application
-grabSQLwithName = do
-    name <-  (lift . getParam) "name"
-    contents <- getParamNode
-    let column = getChildText contents "column"
-        table  = getChildText contents "table"
-    qval <- liftIO $ runQuery $ bldQueryWhereEq column table "name" $ addQuote $ getStrOrEmpty name
-    return $ [X.TextNode $ DT.pack $ qval]
-
--------------------------------------------------------------------------
--- | Uses child element contents to run a basic query with no clauses
-grabSQLbasic :: Splice Application
-grabSQLbasic = do
-    contents <- getParamNode
-    let column = getChildText contents "column"
-        table  = getChildText contents "table"
-    qval <- liftIO $ runQuery $ bldQueryBasic column table 
-    return $ [X.TextNode $ DT.pack $ qval]
 
 
 -------------------------------------------------------------------------
@@ -216,6 +200,7 @@ runQuery (Just x) =  do
         results <- quickQuery' conn x []
         disconnect conn
         return $ (concat . intersperse "," . map fromSql . concat) results
+
 
 getStrOrEmpty :: Maybe ByteString -> String
 getStrOrEmpty x = byteStrToStr $ fromMaybe "Epoisses" x
