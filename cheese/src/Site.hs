@@ -188,13 +188,13 @@ getReqParam req attr =
     byteStrToStr $ head $ fromMaybe [BS.empty] $ rqParam attr req
 
 -------------------------------------------------------------------------
--- | if the prefix is "data:" then it pulls a data value from the URI query data 
+-- | if the prefix is "uri:" then it pulls a data value from the URI query data 
 --   else it returns the value of the attribute from the splice node
 decode :: X.Node -> Request -> String -> String
 decode n r s = 
    let y = getAttr n $ DT.pack s
-       (a,b) = splitAt 5 y
-   in if (a == "data:")
+       (a,b) = splitAt 4 y
+   in if (a == "uri:")
       then byteStrToStr $ head $  fromMaybe [BS.empty] $ rqParam (strToByteStr b) r
       else y
 
