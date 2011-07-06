@@ -27,7 +27,6 @@ import           Snap.Extension.Timer
 import           Snap.Util.FileServe
 import           Snap.Types
 import           Text.Templating.Heist
-import           Debug.Trace
 
 
 import           Application
@@ -56,6 +55,7 @@ echo = do
     heistLocal (bindString "message" (T.decodeUtf8 message)) $ render "echo"
   where
     decodedParam p = fromMaybe "" <$> getParam p
+
 ------------------------------------------------------------------------------
 -- | Renders the cheese_template page.
 my_template ::  Application ()
@@ -80,55 +80,8 @@ site  = route [ ("/",  index)
 
 
 ----------------------------------------------------------------------
--- | Uses tag attributes to run a query where key = value
-uriTextInput :: Splice Application
-uriTextInput = do
-    node <- getParamNode
-    req <- lift getRequest
-    let val = decode node req "value"
-    let label = decode node req "label"
-    let name = decode node req "name"
-    let element = X.Element { X.elementTag = "input",
-                              X.elementAttrs = [("type","text"),("value",DT.pack val),("name",DT.pack name)], 
-                              X.elementChildren = [] }
-    return $ (X.TextNode $ DT.pack $ label ++ ": ") : [element]
-
-
-----------------------------------------------------------------------
--- | Uses tag attributes to run a query where key = value
-uriTextWithSave :: Splice Application
-uriTextWithSave = do
-    node <- getParamNode
-    req <- lift getRequest
-    null <- liftIO $ maybeSaveCheese node req 
-    uriTextInput
-
-maybeSaveCheese :: X.Node -> Request -> IO ()
-maybeSaveCheese node req = do
-    let task = getReqParam req "_task"
-        name = getReqParam req "name"
-    if (not $ null name) && (task == "save")
-    then (saveCheese node req)
-    else return ()
-
-saveCheese :: X.Node -> Request -> IO ()
-saveCheese node req = do
-    conn <- connectPostgreSQL "dbname=test"
-    stmt <- prepare conn "INSERT INTO cheese VALUES (?, ?, ?, ?)"
-    let name    = getReqParam req "name"
-        price   = getReqParam req "price"
-        country = getReqParam req "country"
-        stock   = getReqParam req "stock"
-    execute stmt [toSql name, toSql country, toSql price, toSql stock]
-    commit conn
-    disconnect conn
-
-getReqParam :: Request -> ByteString -> String
-getReqParam req attr = 
-    byteStrToStr $ head $ fromMaybe [BS.empty] $ rqParam attr req
-
-----------------------------------------------------------------------
--- | Uses tag attributes to run a query where key = value
+-- | Uses tag attributes to run an SQL query where key = value
+--   and uses this data as the initial value in an input element
 sqlTextInput :: Splice Application
 sqlTextInput = do
     node <- getParamNode
@@ -144,6 +97,99 @@ sqlTextInput = do
                               X.elementChildren = [] }
     return $ (X.TextNode $ DT.pack $ label ++ ": ") : [element]
 
+
+----------------------------------------------------------------------
+-- | Pulls node attributes from the splice and from the URI query data
+--   and uses this data as the name, label, and initial value for an input element
+uriTextInput :: Splice Application
+uriTextInput = do
+    node <- getParamNode
+    req <- lift getRequest
+    let val = decode node req "value"
+    let label = decode node req "label"
+    let name = decode node req "name"
+    let element = X.Element { X.elementTag = "input",
+                              X.elementAttrs = [("type","text"),("value",DT.pack val),("name",DT.pack name)], 
+                              X.elementChildren = [] }
+    return $ (X.TextNode $ DT.pack $ label ++ ": ") : [element]
+
+
+----------------------------------------------------------------------
+-- | just like uriTextInput, but first saves the current form data to SQL
+uriTextWithSave :: Splice Application
+uriTextWithSave = do
+    saveCheeseData
+    uriTextInput
+
+----------------------------------------------------------------------
+-- | saves the current form data to SQL
+--   must live in the Splice monad to get info from the splice and the URI query
+saveCheeseData :: Splice Application
+saveCheeseData = do
+    req <- lift getRequest
+    nada <- liftIO $ maybeSaveCheese req 
+    return []
+
+----------------------------------------------------------------------
+-- | save the cheese data to SQL but only if ?name is set in the URI query data
+--   and the ?_task is set to "save"
+maybeSaveCheese :: Request -> IO ()
+maybeSaveCheese req = do
+    let task = getReqParam req "_task"
+        name = getReqParam req "name"
+    if (not $ null name) && (task == "save")
+    then (saveCheese req)
+    else return ()
+
+----------------------------------------------------------------------
+-- | save the cheese data to SQL -- this will be an insert if there 
+--   is no entry for the name, an update otherwise
+saveCheese :: Request -> IO ()
+saveCheese req = do
+    let  name = getReqParam req "name"
+    exists <- existsEntry "cheese" "name" name
+    if exists
+    then updateCheese req
+    else insertCheese req
+
+
+----------------------------------------------------------------------
+-- | update the cheese data to SQL
+updateCheese :: Request -> IO ()
+updateCheese req = do
+    conn <- connectPostgreSQL "dbname=test"
+    let values = map (toSql . getReqParam req) cheeseFields
+        where_clause = "name=" ++ (addQuote $ getReqParam req "name")
+        update  = bldUpdate "cheese" (map byteStrToStr cheeseFields) where_clause
+    stmt <- prepare conn update
+    execute stmt $ values
+    commit conn
+    disconnect conn
+
+----------------------------------------------------------------------
+-- | insert the cheese data to SQL
+insertCheese :: Request -> IO ()
+insertCheese req = do
+    conn <- connectPostgreSQL "dbname=test"
+    stmt <- prepare conn "INSERT INTO cheese VALUES (?, ?, ?, ?)"
+    let values = map (toSql . getReqParam req) cheeseFields
+    execute stmt values
+    commit conn
+    disconnect conn
+
+----------------------------------------------------------------------
+-- | these are the columns in the cheese database
+cheeseFields = ["name","country","price","stock"]
+
+----------------------------------------------------------------------
+-- | gets the value of the named attribute from the URI query string
+getReqParam :: Request -> ByteString -> String
+getReqParam req attr = 
+    byteStrToStr $ head $ fromMaybe [BS.empty] $ rqParam attr req
+
+-------------------------------------------------------------------------
+-- | if the prefix is "data:" then it pulls a data value from the URI query data 
+--   else it returns the value of the attribute from the splice node
 decode :: X.Node -> Request -> String -> String
 decode n r s = 
    let y = getAttr n $ DT.pack s
@@ -151,8 +197,6 @@ decode n r s =
    in if (a == "data:")
       then byteStrToStr $ head $  fromMaybe [BS.empty] $ rqParam (strToByteStr b) r
       else y
-
-
 
 
 -------------------------------------------------------------------------
@@ -165,6 +209,28 @@ getAttr x y = DT.unpack $ maybe (DT.pack "") id (X.getAttribute y x)
 getChildText :: X.Node -> DT.Text -> String
 getChildText x y = DT.unpack $ maybe (DT.pack "") id (liftM X.nodeText tag)
     where tag = X.childElementTag y x 
+
+
+-------------------------------------------------------------------------
+-- | builds an SQL query string for updating a record
+bldUpdate :: String -> [String] -> String -> String
+bldUpdate table columns where_clause = 
+    "UPDATE " ++ table ++ " SET " ++ update_list ++ " WHERE " ++ where_clause
+  where
+    updateEntry c = c ++ "=?"
+    update_list = if null columns
+                  then ""
+                  else foldl (\t c -> t ++ ", " ++ updateEntry c) (updateEntry $ head columns) 
+                                                                  (tail columns)
+
+-------------------------------------------------------------------------
+-- | returns True if there is an entry in the table where key==value
+existsEntry :: String -> String -> String -> IO Bool
+existsEntry table key value =  do
+    results <- runQuery $ bldQueryWhereEq "*" table key $ addQuote value
+    if "" == results
+    then return False
+    else return True
 
 -------------------------------------------------------------------------
 -- | builds a query with a WHERE EQUALS clause
@@ -202,12 +268,15 @@ runQuery (Just x) =  do
         return $ (concat . intersperse "," . map fromSql . concat) results
 
 
-getStrOrEmpty :: Maybe ByteString -> String
-getStrOrEmpty x = byteStrToStr $ fromMaybe "Epoisses" x
-
+-------------------------------------------------------------------------
+-- | builds an SQL query string for updating a record
 addQuote :: String -> String
 addQuote x = "'" ++ x ++ "'"
 
+
+-------------------------------------------------------------------------
+-- | ByteString conversion functions
+--
 byteStrToStr :: ByteString -> String
 byteStrToStr x = map (chr . fromIntegral) $ BS.unpack x
 
