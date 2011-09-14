@@ -13,7 +13,7 @@
       </p>
       <p>
         Echo test:
-        <apply template="nav">
+        <apply template="nav"/>
       </p>
       <table id="info">
         <tr>

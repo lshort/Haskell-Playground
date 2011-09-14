@@ -25,6 +25,6 @@ Template
   <table>cheese</table>
 </get_sql_basic>
 <br />  <br />
-<apply template="nav">
+<apply template="nav"/>
 </body>
 </html>
