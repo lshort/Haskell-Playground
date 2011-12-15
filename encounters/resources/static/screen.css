@@ -1,0 +1,87 @@
+html {
+   padding: 0;
+   margin: 0;
+   background-color: #ffffff;
+   font-family: Verdana, Helvetica, sans-serif;
+}
+body {
+   padding: 0;
+   margin: 0;
+   font: small/1.4em sans-serif;
+}
+th {
+  font-size: 0.85em;
+  font-style: bold;
+}
+th, td {
+  border: thin dotted gray;
+  padding: 2px;
+}
+#encounter {
+  float: right;
+  width: 600px;
+  top-margin: 0px;
+}
+#region {
+  margin: 5px 625px 7px 5px;
+}
+#nav {
+  clear: right;
+  padding: 0px;
+  margin: 2px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #aaaadd;
+  background-color: #ccccee;
+}
+div {
+  padding: 3px;
+  margin: 5px;
+  border-width: 4px;
+  border-style: double;
+  border-color: #bbbbbb;
+  background-color: #dddddd;
+}
+div div {
+  padding: 3px;
+  margin: 6px 2px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #bbbbbb;
+  background-color: #e8e8e8;
+}
+fieldset {
+  padding: 2px;
+  margin: 2px;
+  border-width: 1px;
+  border-stype: solid;
+  border-color: #bbbbbb;
+  background-color: #f9f9f9;
+}
+legend {
+  border: 1px solid #bbbbbb;
+  font-size: 1em;
+  font-style: bold;
+  background-color: #f9f9f9;
+}
+input {
+  font-size: 1em;
+}
+a {
+   text-decoration: underline;
+}
+a:hover {
+   cursor: pointer;
+   text-decoration: underline;
+   background: #ffb3c6;
+   color: #0d5353;
+}
+img {
+   border: none;
+}
+#content {
+   padding-left: 1.1em;
+}
+#info {
+   font-size: 60%;
+}
