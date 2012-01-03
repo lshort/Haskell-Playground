@@ -45,7 +45,7 @@ Prime:
 Primary
 <sql_text_input column="pri_melee_wpn" label="Wpn" table="race" key="race_name" keyval="uri:race.race_name" size="16" />
 <sql_text_input column="pri_melee_bonus" label="Atk" table="race" key="race_name" keyval="uri:race.race_name" size="3" />
-<sql_text_input column="pri_melee_dmg" label="Con" table="race" key="race_name" keyval="uri:race.race_name" size="3" />
+<sql_text_input column="pri_melee_dmg" label="Dmg" table="race" key="race_name" keyval="uri:race.race_name" size="3" />
 <br />
 Secondary
 <sql_text_input column="sec_melee_wpn" label="Wpn" table="race" key="race_name" keyval="uri:race.race_name" size="16" />
@@ -62,7 +62,7 @@ Elite
 Primary
 <sql_text_input column="pri_range_wpn" label="Wpn" table="race" key="race_name" keyval="uri:race.race_name" size="16" />
 <sql_text_input column="pri_range_bonus" label="Atk" table="race" key="race_name" keyval="uri:race.race_name" size="3" />
-<sql_text_input column="pri_range_dmg" label="Con" table="race" key="race_name" keyval="uri:race.race_name" size="3" />
+<sql_text_input column="pri_range_dmg" label="Dmg" table="race" key="race_name" keyval="uri:race.race_name" size="3" />
 <br />
 Secondary
 <sql_text_input column="sec_range_wpn" label="Wpn" table="race" key="race_name" keyval="uri:race.race_name" size="16" />
