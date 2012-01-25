@@ -81,10 +81,10 @@ buildStatLine race template = do
     override <- getTpl "prime_override"
     let getA = getAttr getRace getTpl prime override hitDice
     str <- getA True  "mod_str"
-    int <- getA False "mod_int"
-    wis <- getA False "mod_wis"
     dex <- getA True  "mod_dex"
     con <- getA True  "mod_con"
+    int <- getA False "mod_int"
+    wis <- getA False "mod_wis"
     cha <- getA False "mod_cha"
     ac <- getBase getRace getTpl "armor_class"
     strB <- getBase getRace getTpl "mod_str"
@@ -97,9 +97,9 @@ buildStatLine race template = do
              ++ " Tc" ++ show (10 + dexB)
              ++ " Grp" ++ show (10 + dexB + strB)
              ++ " HD" ++ (show hitDice)
-             ++ " Mv" ++ move ++ " sv(s" ++ (show str) ++ ".i" ++ (show int) 
-             ++ ".w" ++ (show wis) ++ ".d" ++ (show dex) ++ ".c" ++ (show con) 
-             ++ ".ch" ++ (show cha ) ++ ") Atk[" ++ wpns ++ "] "
+             ++ " Mv" ++ move ++ " sv(S" ++ (show str) ++ ".I" ++ (show int) 
+             ++ ".W" ++ (show wis) ++ ".D" ++ (show dex) ++ ".C" ++ (show con) 
+             ++ ".Ch" ++ (show cha ) ++ ") " ++ wpns 
              ++ showSpecial specialRace specialTpl
   where
     metaC xs = (toUpper $ head xs) : tail xs
@@ -123,7 +123,7 @@ wpnInfo getRace getTpl level strB dexB hitDice = do
     rDamageFull <- getDmg level rDmg
     let mBonus = (read mBon) + hitDice
         rBonus = (read rBon) + hitDice
-    return $ (formatAtk mWpn mBonus mDamageFull) ++ "--" ++ (formatAtk rWpn rBonus rDamageFull)
+    return $ "M[" ++ (formatAtk mWpn mBonus mDamageFull) ++ "] R[" ++ (formatAtk rWpn rBonus rDamageFull) ++ "]"
   where 
     get_abbrev x
        | x == "Secondary"  = "sec"
@@ -132,7 +132,7 @@ wpnInfo getRace getTpl level strB dexB hitDice = do
 
 formatAtk :: String -> Int -> String -> String
 formatAtk w b d = if null w then "" 
-                            else w ++ "+" ++ (show b) ++ ":" ++ d
+                            else w ++ "+" ++ (show b) ++ "/" ++ d
 
 getDmg :: Int -> String -> IO String
 getDmg lvl mod = do
@@ -187,7 +187,7 @@ buildHeader region encounter = do
     wrap s = if null s then "" else "[" ++ s ++ "]"
     format name dc con = if null name 
                           then "" 
-                          else "(" ++ name ++ "/DC:" ++ dc ++ "/" ++ con ++ ")"
+                          else "(" ++ name ++ "|DC" ++ dc ++ "|" ++ con ++ ")"
 
 creatureStrings :: String -> String -> String -> String -> String -> IO [String]
 creatureStrings race tpl base ds dc = do
