@@ -24,11 +24,11 @@ import           Snap.Types
 import           Text.Templating.Heist
 import           Debug.Trace
 import           CreatureTables
-import           Query
+import           QueryLite
 import           System.Environment
 
 import           Database.HDBC
-import           Database.HDBC.PostgreSQL
+import           Database.HDBC.Sqlite3
 import           Database.HDBC.ColTypes as HDBCCT
 
 buildTableIf :: [String] -> TableDef -> IO()

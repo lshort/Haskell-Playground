@@ -9,7 +9,7 @@ module Site
   ( site
   ) where
 
-import           Query
+import           QueryLite
 import           CreatureTables
 import           Application
 import           Safe
@@ -35,7 +35,7 @@ import           Text.Templating.Heist
 
 import           Debug.Trace
 import           Database.HDBC
-import           Database.HDBC.PostgreSQL
+import           Database.HDBC.Sqlite3
 
 ------------------------------------------------------------------------------
 -- | Renders the front page of the sample site.
@@ -365,7 +365,7 @@ saveTable req tables table_name key@(UriKeyName k) = do
 deleteFromTable :: Request -> TableDef -> UriKeyName -> IO ()
 --deleteFromTable req t key | trace "deleteFromTable" False = undefined
 deleteFromTable req t key@(UriKeyName k) = do
-    conn <- connectPostgreSQL "dbname=test"
+    conn <- connectSqlite3 "dbname=test"
     let quoted_keyval = addQuote $ getReqParam req $ strToByteStr k
         where_clause = WhereClause $ (toStr $ getColName key) ++ "=" ++ quoted_keyval
         update  = bldDelete (getTableName t) where_clause
@@ -379,7 +379,7 @@ deleteFromTable req t key@(UriKeyName k) = do
 updateTable :: Request -> TableDef -> UriKeyName -> IO ()
 --updateTable req t key | trace "updateTable" False = undefined
 updateTable req t key@(UriKeyName k) = do
-    conn <- connectPostgreSQL $ "dbname=test"
+    conn <- connectSqlite3 $ "dbname=test"
     let tableName = getTableName t
         values = map (toSql . getReqParam req . strToByteStr . toStr . buildElName tableName ) $ getColumns t
         quoted_keyval = addQuote $ getReqParam req $ strToByteStr k
@@ -395,7 +395,7 @@ updateTable req t key@(UriKeyName k) = do
 insertTable :: Request -> TableDef -> IO ()
 --insertTable req t | trace "insertTable" False = undefined
 insertTable req t@(TableDef _ a _ _) = do
-    conn <- connectPostgreSQL "dbname=test"
+    conn <- connectSqlite3 "dbname=test"
     let cols = getColumns t
         tableName = getTableName t
         form_vals = map (getReqParam req . strToByteStr . toStr . buildElName tableName) cols

@@ -4,9 +4,9 @@ module CreatureTables (
 )  where 
 
 import           Database.HDBC
-import           Database.HDBC.PostgreSQL
+import           Database.HDBC.Sqlite3
 import           Database.HDBC.ColTypes as HDBCCT
-import           Query
+import           QueryLite
 
 
 regionTable :: TableDef
