@@ -57,7 +57,7 @@ getDefault SqlRealT     = "0.0"
 getDefault SqlBitT      = "false"
 getDefault _            = undefined
 
-
+ 
 buildCore :: HDBCCT.SqlTypeId -> String -> String
 buildCore t n = n ++ " " ++ getTypeName t
 
